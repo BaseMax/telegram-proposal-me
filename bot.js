@@ -118,7 +118,6 @@ bot.command("report", async (ctx) => {
     try {
       await runPdflatex(texPath, workdir);
     } catch (err) {
-      // send logs for debugging and the .tex file
       await ctx.reply("Failed to compile LaTeX. Sending .tex and error logs.");
       await ctx.replyWithDocument({ source: fs.createReadStream(texPath), filename: texFilename });
       await ctx.reply("Error: " + String(err.message).slice(0, 1000));
@@ -140,7 +139,6 @@ bot.command("report", async (ctx) => {
     try {
       fs.unlinkSync(texPath);
       fs.unlinkSync(generatedPdfPath);
-      // remove aux/log files from pdflatex
       const aux = texPath.replace(/\.tex$/, ".aux");
       const log = texPath.replace(/\.tex$/, ".log");
       if (fs.existsSync(aux)) fs.unlinkSync(aux);
