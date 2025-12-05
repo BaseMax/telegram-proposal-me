@@ -1,5 +1,5 @@
 services:
- telegram-bot:
+  telegram-bot:
     container_name: ${PROJECT_PREFIX}_telegram_bot
     build:
       context: ./
@@ -8,5 +8,5 @@ services:
     volumes:
       - ./:/app
     environment:
-      OPENAI_API_KEY: ${TELEGRAM_BOT_TOKEN}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
