@@ -22,5 +22,5 @@ RUN npm install --production
 COPY . .
 
 # CMD ["/bin/bash"]
-CMD ["tail", "-f", "/dev/null"]
-# CMD ["node", "bot.js"]
+# CMD ["tail", "-f", "/dev/null"]
+CMD ["node", "bot.js"]
