@@ -1,0 +1,12 @@
+services:
+ telegram-bot:
+    container_name: ${PROJECT_PREFIX}_telegram_bot
+    build:
+      context: ./
+      dockerfile: Dockerfile-telegrambot
+    restart: always
+    volumes:
+      - ./:/app
+    environment:
+      OPENAI_API_KEY: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}

@@ -12,4 +12,10 @@ $ python bot.py
 $ docker compose up --build -d
 ```
 
+## Stop containers
+
+```bash
+$ docker compose down
+```
+
 Copyright 2025, Seyyed Ali Mohammadiyeh (Max Base)
