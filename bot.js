@@ -46,6 +46,38 @@ function writeFileSyncAtomic(filePath, content) {
   fs.writeFileSync(filePath, content, { encoding: "utf-8" });
 }
 
+async function generateLatexWithRetry(title, description, maxAttempts = 3) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      console.log(`Attempt ${attempt}: Calling OpenAI for LaTeX...`);
+
+      const prompt = createPromptReturnOnlyLatex(title, description);
+
+      const resp = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: "You are a helpful assistant that outputs valid LaTeX documents." },
+          { role: "user", content: prompt }
+        ],
+        temperature: 0.2,
+        max_tokens: 2500
+      });
+
+      const latex = resp.choices?.[0]?.message?.content || "";
+
+      if (!latex.includes("\\documentclass")) {
+        throw new Error("OpenAI returned invalid LaTeX.");
+      }
+
+      return latex;
+    } catch (err) {
+      console.error(`OpenAI LaTeX generation failed on attempt ${attempt}:`, err.message);
+
+      if (attempt === maxAttempts) throw err;
+    }
+  }
+}
+
 async function runPdflatex(texFilePath, cwd) {
   const runOnce = () =>
     new Promise((resolve, reject) => {
@@ -83,27 +115,17 @@ bot.command("report", async (ctx) => {
       title = payload;
       description = "Please provide description in the same message after newline or run again.";
     } else {
-      await ctx.reply("Usage: /report <Title>\\n<Description>. Provide both title and description in the same message.");
+      await ctx.reply("Usage: /report <Title>\\n<Description>.");
       return;
     }
 
-    const replyMsg = await ctx.reply(`Got it — generating LaTeX for "${title}"... This may take a few seconds.`);
+    await ctx.reply(`Got it — generating LaTeX for "${title}"... This may take a few seconds.`);
 
-    const prompt = createPromptReturnOnlyLatex(title, description);
-
-    const resp = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: "You are a helpful assistant that outputs valid LaTeX documents." },
-        { role: "user", content: prompt }
-      ],
-      temperature: 0.2,
-      max_tokens: 2500
-    });
-
-    const latexContent = resp.choices?.[0]?.message?.content;
-    if (!latexContent || !latexContent.includes("\\documentclass")) {
-      await ctx.reply("OpenAI did not return valid LaTeX. Response preview:\n" + (latexContent || "<empty>"));
+    let latexContent;
+    try {
+      latexContent = await generateLatexWithRetry(title, description, 3);
+    } catch (err) {
+      await ctx.reply("OpenAI failed to produce valid LaTeX after 3 attempts.\n" + err.message);
       return;
     }
 
@@ -111,21 +133,22 @@ bot.command("report", async (ctx) => {
     const texFilename = `report-${id}.tex`;
     const pdfFilename = `report-${id}.pdf`;
     const workdir = tmpDir;
-    const texPath = path.join(workdir, texFilename);
 
+    const texPath = path.join(workdir, texFilename);
     writeFileSyncAtomic(texPath, latexContent);
 
     try {
       await runPdflatex(texPath, workdir);
     } catch (err) {
-      await ctx.reply("Failed to compile LaTeX. Sending .tex and error logs.");
+      await ctx.reply("Failed to compile LaTeX after generation.\nSending .tex and the error:");
       await ctx.replyWithDocument({ source: fs.createReadStream(texPath), filename: texFilename });
       await ctx.reply("Error: " + String(err.message).slice(0, 1000));
       return;
     }
 
     const pdfPath = path.join(workdir, pdfFilename);
-    const generatedPdfPath = path.join(workdir, texFilename.replace(/\.tex$/, ".pdf"));
+    const generatedPdfPath = texPath.replace(/\.tex$/, ".pdf");
+
     if (!fs.existsSync(generatedPdfPath)) {
       await ctx.reply("PDF not found after compilation. Sending .tex for inspection.");
       await ctx.replyWithDocument({ source: fs.createReadStream(texPath), filename: texFilename });
@@ -142,11 +165,10 @@ bot.command("report", async (ctx) => {
       const aux = texPath.replace(/\.tex$/, ".aux");
       const log = texPath.replace(/\.tex$/, ".log");
       if (fs.existsSync(aux)) fs.unlinkSync(aux);
-      if (fs.existsSync(log)) fs.unlinkSync(log);
+      if (fs.existsExists(log)) fs.unlinkSync(log);
     } catch (e) {
       console.warn("Cleanup failed:", e);
     }
-
   } catch (err) {
     console.error(err);
     await ctx.reply("Internal error: " + String(err.message).slice(0, 1000));
