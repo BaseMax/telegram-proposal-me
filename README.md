@@ -2,8 +2,6 @@
 
 A Telegram bot that generates **professional LaTeX reports** using **OpenAI**, compiles them into **PDF**, and returns both the `.tex` and `.pdf` files to the user fully automatically.
 
-Designed, engineered, and maintained by **Seyyed Ali Mohammadiyeh (Max Base)**.
-
 ---
 
 ## 📌 **Features**
