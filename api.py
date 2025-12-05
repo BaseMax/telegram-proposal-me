@@ -1,0 +1,1 @@
+I want to design a telegram bot to accept a title and subject or description and then send a request to API OpenAI to generate a reports, I want to get latex code from API OpenAI and then run latex pdf to generate pdf/
