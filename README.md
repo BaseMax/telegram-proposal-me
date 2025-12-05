@@ -8,13 +8,13 @@ Designed, engineered, and maintained by **Seyyed Ali Mohammadiyeh (Max Base)**.
 
 ## 📌 **Features**
 
-✔ Accepts a **title** and **description** from the user
-✔ Generates **LaTeX code** via OpenAI (with up to **3 retry attempts**)
-✔ Compiles the LaTeX into **PDF** using `pdflatex`
-✔ Returns both **.tex** and **.pdf** to the Telegram user
-✔ Uses a safe temporary directory and cleans up
-✔ Docker-ready
-✔ Self-contained and production-ready
+- ✔ Accepts a **title** and **description** from the user
+- ✔ Generates **LaTeX code** via OpenAI (with up to **3 retry attempts**)
+- ✔ Compiles the LaTeX into **PDF** using `pdflatex`
+- ✔ Returns both **.tex** and **.pdf** to the Telegram user
+- ✔ Uses a safe temporary directory and cleans up
+- ✔ Docker-ready
+- ✔ Self-contained and production-ready
 
 ---
 
